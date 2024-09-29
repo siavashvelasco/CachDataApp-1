@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualBasic;
 using System;
-var bassCashingClass = new Cash<string>();
-var dataDownloader = new SlowDataDownloader(bassCashingClass);
+var dataDownloader = new SlowDataDownloader<Cash<object, object>>(new Cash<object, object>());
 
 
 Console.WriteLine(dataDownloader.DownloadData("id1"));
@@ -24,34 +23,38 @@ Console.ReadKey();
 
 
 //====================    IDataDownloader
-public interface IDataDownloader
+public interface IDataDownloader<T>
 {
 
-    string DownloadData(string resourceId);
+    string DownloadData<Key>(Key resourceId);
 }
 
 
 
 
-public class SlowDataDownloader : IDataDownloader //T = BassCashingClas<string>
+public class SlowDataDownloader<T> : IDataDownloader<T> where T:ICash<object, object>
+      //T = Cash<type>
 
 {
-    Cash<string> _cash;
-    public SlowDataDownloader(Cash<string> cash)
+    T _cash;
+    public SlowDataDownloader(T cash)
     {
         _cash = cash;
     }
 
-    public string DownloadData(string resourceId)
+    public string DownloadData<Key>(Key resourceId)
     {
         {
             if (!_cash._cashedData.ContainsKey(resourceId))
             {
                 Thread.Sleep(1000);
-                _cash.SetCach(resourceId, $"Some data for {resourceId}");
-                return $"Some data for {resourceId}";
+                var somedata = $"somedata{resourceId}111111";
+                _cash.SetCach(resourceId, somedata);
+                
+                return somedata.ToString();
+
             }
-            return _cash.GetCach(resourceId);
+            return _cash.GetCach(resourceId).ToString();
 
         }
 
@@ -59,16 +62,22 @@ public class SlowDataDownloader : IDataDownloader //T = BassCashingClas<string>
     }
 }
 //================= ICashing            ===================================
-public class Cash<T>
+public interface ICash<Key, Value>
 {
-    public Dictionary<string, T> _cashedData { get; } = new() { };
+    public Dictionary<Key, Value> _cashedData { get; }
+    public Value GetCach(Key resourceId);
+    public void SetCach(Key resourceId, Value data);
 
-    public T GetCach(string resourceId)
+}public class Cash<Key,Value>: ICash<Key, Value>
+{
+    public Dictionary<Key, Value> _cashedData { get; } = new() { };
+
+    public Value GetCach(Key resourceId)
     {
         return _cashedData[resourceId];
     }
 
-    public void SetCach(string resourceId, T data)
+    public void SetCach(Key resourceId, Value data)
     {
         _cashedData[resourceId] = data;
     }
