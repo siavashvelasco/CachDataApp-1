@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using System;
+// it's a practice for cashing data test:
+
 var dataDownloader = new SlowDataDownloader<Cash<object, object>>(new Cash<object, object>());
 
 
